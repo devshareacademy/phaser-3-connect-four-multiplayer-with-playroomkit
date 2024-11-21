@@ -28,7 +28,9 @@ export class GameScene extends Phaser.Scene {
     this.#enableInput();
 
     this.cameras.main.fadeIn(1000, 31, 50, 110);
-    this.cameras.main.on(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, async () => {});
+    this.cameras.main.on(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, async () => {
+      // to be implemented
+    });
   }
 
   #createBoard(): void {
@@ -163,13 +165,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   #disableInput(): void {
-    // this.input.enabled = false;
     this.input.enabled = true;
+    this.#gamePiece.setVisible(true);
     this.#currentPlayerTurnText.setText('Player Twos turn');
   }
 
   #enableInput(): void {
     this.input.enabled = true;
+    this.#gamePiece.setVisible(true);
     this.#currentPlayerTurnText.setText('Player Ones turn');
   }
 
