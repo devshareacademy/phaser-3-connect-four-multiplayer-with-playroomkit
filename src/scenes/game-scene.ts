@@ -3,7 +3,6 @@ import { ConnectFour, ConnectFourData } from '@devshareacademy/connect-four';
 import { FRAME_SIZE, GAME_ASSETS, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../common';
 
 export class GameScene extends Phaser.Scene {
-  #skipFadeIn!: boolean;
   #connectFour!: ConnectFour;
   #gamePiece!: Phaser.GameObjects.Image;
   #boardContainer!: Phaser.GameObjects.Container;
@@ -14,9 +13,8 @@ export class GameScene extends Phaser.Scene {
     super({ key: SCENE_KEYS.GAME });
   }
 
-  public init(data: { skipFadeIn?: boolean }) {
+  public init() {
     this.#connectFour = new ConnectFour();
-    this.#skipFadeIn = data?.skipFadeIn || false;
   }
 
   public create(): void {
@@ -29,9 +27,8 @@ export class GameScene extends Phaser.Scene {
     this.#createInputColumns();
     this.#enableInput();
 
-    if (!this.#skipFadeIn) {
-      this.cameras.main.fadeIn(1000, 31, 50, 110);
-    }
+    this.cameras.main.fadeIn(1000, 31, 50, 110);
+    this.cameras.main.on(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, async () => {});
   }
 
   #createBoard(): void {
@@ -55,7 +52,8 @@ export class GameScene extends Phaser.Scene {
         .setData(columnIndexKey, i)
         .setInteractive();
 
-      //const rect = this.add.rectangle(zone.x, zone.y, zone.width, zone.height, 0xff0000, 0.8);
+      // used for debugging the zone game objects
+      // const rect = this.add.rectangle(zone.x, zone.y, zone.width, zone.height, 0xff0000, 0.8);
       this.#boardContainer.add([zone]);
 
       zone.on(Phaser.Input.Events.POINTER_OVER, () => {
@@ -182,7 +180,10 @@ export class GameScene extends Phaser.Scene {
       duration: 1000,
       ease: Phaser.Math.Easing.Sine.InOut,
       onComplete: () => {
-        this.scene.restart({ skipFadeIn: true });
+        this.cameras.main.fadeOut(1000);
+        this.cameras.main.on(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+          window.location.replace('/');
+        });
       },
     });
   }
