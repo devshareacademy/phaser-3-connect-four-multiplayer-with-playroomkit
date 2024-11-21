@@ -2,6 +2,7 @@ export const GAME_ASSETS = {
   RED_PIECE: 'RED_PIECE',
   YELLOW_PIECE: 'YELLOW_PIECE',
   BOARD: 'BOARD',
+  DANCING_SCRIPT_FONT: 'DANCING_SCRIPT_FONT'
 } as const;
 
 export const SCENE_KEYS = {

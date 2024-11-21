@@ -136,13 +136,13 @@ export class GameScene extends Phaser.Scene {
     this.add
       .text(this.scale.width / 2, this.scale.height / 2 - 20, winText, {
         fontSize: '64px',
-        fontFamily: 'Dancing Script',
+        fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
       })
       .setOrigin(0.5)
       .setDepth(5);
     this.add
       .text(this.scale.width / 2, this.scale.height / 2 + 40, 'Click to play again!', {
-        fontFamily: 'Dancing Script',
+        fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
         fontSize: '32px',
       })
       .setOrigin(0.5)
@@ -157,7 +157,7 @@ export class GameScene extends Phaser.Scene {
     const { width } = this.scale;
     this.#currentPlayerTurnText = this.add
       .text(width / 2, 50, '', {
-        fontFamily: 'Dancing Script',
+        fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
         fontSize: '64px',
       })
       .setOrigin(0.5)

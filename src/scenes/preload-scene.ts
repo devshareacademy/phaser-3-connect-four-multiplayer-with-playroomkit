@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser';
-import { WebFontFileLoader } from '../utils/web-font-file-loader';
 import { GAME_ASSETS, SCENE_KEYS } from '../common';
 
 export class PreLoadScene extends Phaser.Scene {
@@ -12,7 +11,8 @@ export class PreLoadScene extends Phaser.Scene {
     this.load.image(GAME_ASSETS.BOARD, 'board.png');
     this.load.image(GAME_ASSETS.RED_PIECE, 'red.png');
     this.load.image(GAME_ASSETS.YELLOW_PIECE, 'yellow.png');
-    this.load.addFile(new WebFontFileLoader(this.load, ['Dancing Script:700']));
+    this.load.setPath('assets/fonts');
+    this.load.font(GAME_ASSETS.DANCING_SCRIPT_FONT, 'Dancing_Script/DancingScript-Regular.ttf', 'truetype');
   }
 
   public create(): void {

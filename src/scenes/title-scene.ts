@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { SCENE_KEYS } from '../common';
+import { GAME_ASSETS, SCENE_KEYS } from '../common';
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -14,14 +14,14 @@ export class TitleScene extends Phaser.Scene {
 
     const titleText = this.add
       .text(this.scale.width / 2, 350, 'Connect Four', {
-        fontFamily: 'Dancing Script',
+        fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
         fontSize: '200px',
       })
       .setOrigin(0.5);
 
     const clickToStartText = this.add
       .text(this.scale.width / 2, 700, 'Click to play', {
-        fontFamily: 'Dancing Script',
+        fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
         fontSize: '80px',
       })
       .setAlpha(0)

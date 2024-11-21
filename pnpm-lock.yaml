@@ -9,8 +9,8 @@ dependencies:
     specifier: 0.2.1
     version: 0.2.1
   phaser:
-    specifier: 3.85.2
-    version: 3.85.2
+    specifier: 3.87.0
+    version: 3.87.0
   playroomkit:
     specifier: 0.0.81
     version: 0.0.81(react-dom@18.3.1)(react@18.3.1)
@@ -1172,8 +1172,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /phaser@3.85.2:
-    resolution: {integrity: sha512-bD/58E1gvCsEH0Lftb2BiJ8FQ86kb8HHOS656lLXPwg8ZXkskZGsfdyQO21Y57+neGOUEaUthSFfDyVULy5B1g==}
+  /phaser@3.87.0:
+    resolution: {integrity: sha512-AyI1b3T5fp05gzf6WUmu2FNqaZL+Y7w88yBRLf7YZXF9bncUSHpnDrupnTGoPqy/RKHRLBcay7zWeqQ2wiMWcw==}
     dependencies:
       eventemitter3: 5.0.1
     dev: false
