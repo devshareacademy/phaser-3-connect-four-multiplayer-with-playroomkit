@@ -78,26 +78,21 @@ export class GameScene extends Phaser.Scene {
   }
 
   #addGamePiece(row: number, col: number, player: string): void {
-    const gameAssetKey = player === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.RED_PIECE : GAME_ASSETS.YELLOW_PIECE;
     const nextPlayerAssetKey = player === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.YELLOW_PIECE : GAME_ASSETS.RED_PIECE;
-    const x = col * FRAME_SIZE;
-    const y = row * FRAME_SIZE + -FRAME_SIZE * 2 + 5;
-    const piece = this.add.image(x, y, gameAssetKey).setDepth(1).setVisible(false);
-    this.#boardContainer.add(piece);
-    this.#gamePieceContainer.add(piece);
+    const piece = this.#createGamePiece(row, col, player, false);
 
     this.input.enabled = false;
-    this.#gamePiece.setX(x);
+    this.#gamePiece.setX(piece.x).setVisible(true);
 
     this.tweens.add({
       targets: this.#gamePiece,
-      y: y,
+      y: piece.y,
       ease: Phaser.Math.Easing.Sine.InOut,
       duration: row * 80,
       onComplete: () => {
         this.tweens.add({
           targets: this.#gamePiece,
-          y: y - 5 * row - 20,
+          y: piece.y - 5 * row - 20,
           ease: Phaser.Math.Easing.Sine.InOut,
           duration: 100,
           yoyo: true,
@@ -110,6 +105,16 @@ export class GameScene extends Phaser.Scene {
         });
       },
     });
+  }
+
+  #createGamePiece(row: number, col: number, player: string, isVisible: boolean): Phaser.GameObjects.Image {
+    const gameAssetKey = player === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.RED_PIECE : GAME_ASSETS.YELLOW_PIECE;
+    const x = col * FRAME_SIZE;
+    const y = row * FRAME_SIZE + -FRAME_SIZE * 2 + 5;
+    const piece = this.add.image(x, y, gameAssetKey).setDepth(1).setVisible(isVisible);
+    this.#boardContainer.add(piece);
+    this.#gamePieceContainer.add(piece);
+    return piece;
   }
 
   #checkForGameOver(): void {
