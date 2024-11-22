@@ -1,3 +1,10 @@
+/**
+ * After all of the assets for our game our loaded, this scene is shown to the player.
+ * The title scene launches the demo scene which has a game of Connect Four being played
+ * in the background. Once the player is ready to start the game, if they click on this scene
+ * this will stop the demo and launch the Game Scene.
+ */
+
 import * as Phaser from 'phaser';
 import { GAME_ASSETS, SCENE_KEYS } from '../common';
 

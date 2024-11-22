@@ -1,3 +1,7 @@
+/**
+ * Responsible for loading all game assets that are required for our other Phaser Scenes.
+ */
+
 import * as Phaser from 'phaser';
 import { GAME_ASSETS, SCENE_KEYS } from '../common';
 

@@ -1,3 +1,8 @@
+/**
+ * Main entry point for our web app, and is responsible for constructing and starting
+ * our Phaser 3 game instance.
+ */
+
 import * as Phaser from 'phaser';
 import { GameScene } from './scenes/game-scene';
 import { PreLoadScene } from './scenes/preload-scene';

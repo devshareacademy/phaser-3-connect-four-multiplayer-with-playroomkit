@@ -1,3 +1,8 @@
+/**
+ * This scene is launched automatically from our Title Scene, and is used for simulating
+ * a game of Connect Four being played.
+ */
+
 import * as Phaser from 'phaser';
 import { ConnectFour, ConnectFourData } from '@devshareacademy/connect-four';
 import { FRAME_SIZE, GAME_ASSETS, SCENE_KEYS, sleep } from '../common';

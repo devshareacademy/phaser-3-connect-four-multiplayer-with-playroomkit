@@ -1,3 +1,7 @@
+/**
+ * Core Phaser 3 Scene that has the actual game play of our Connect Four Game.
+ */
+
 import * as Phaser from 'phaser';
 import { ConnectFour, ConnectFourData } from '@devshareacademy/connect-four';
 import { FRAME_SIZE, GAME_ASSETS, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../common';
@@ -33,12 +37,22 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Creates the core Phaser Game Object containers that represent our game board and the floating
+   * game piece that players will drop into the board. We use containers here to make it easier
+   * to position the individual game pieces into the correct spots on the board.
+   */
   #createBoard(): void {
     this.#boardContainer = this.add.container(256 + FRAME_SIZE, 500, []).setDepth(1);
     this.#gamePieceContainer = this.add.container(256 + FRAME_SIZE, 500, []).setDepth(1);
     this.add.image(256, 120, GAME_ASSETS.BOARD).setOrigin(0).setDepth(2);
   }
 
+  /**
+   * Creates the Phaser Zone Game Objects that represent each of the columns a Connect Four game
+   * piece can be dropped into. These game objects are not rendered in the game and they are just
+   * used as an easy way to handle player input on a given column.
+   */
   #createInputColumns(): void {
     const columnIndexKey = 'columnIndex';
 
@@ -77,6 +91,10 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Creates and adds a new Phaser game object to the existing Connect Four board state. Once the game
+   * piece is created, we animate dropping the game piece into the correct spot.
+   */
   #addGamePiece(row: number, col: number, player: string): void {
     const nextPlayerAssetKey = player === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.YELLOW_PIECE : GAME_ASSETS.RED_PIECE;
     const piece = this.#createGamePiece(row, col, player, false);
@@ -107,6 +125,11 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Creates a Phaser image game object that represents one of the Connect Four game pieces. The pieces
+   * are placed in a Phaser container game object to make it easier to position the game piece in the correct
+   * row and col of the Connect Four board.
+   */
   #createGamePiece(row: number, col: number, player: string, isVisible: boolean): Phaser.GameObjects.Image {
     const gameAssetKey = player === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.RED_PIECE : GAME_ASSETS.YELLOW_PIECE;
     const x = col * FRAME_SIZE;
@@ -117,6 +140,11 @@ export class GameScene extends Phaser.Scene {
     return piece;
   }
 
+  /**
+   * After each move is made in the Connect Four game, this method is called to see if one of the players
+   * has won the game. If so, we use a few Phaser game objects to notify the players who won the game, and
+   * if no one has one, the game will continue to the next player.
+   */
   #checkForGameOver(): void {
     if (!this.#connectFour.isGameOver) {
       if (this.#connectFour.playersTurn === ConnectFourData.PLAYER.ONE) {
@@ -158,6 +186,9 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Creates the main Phaser text game object that notifies players of the state of the game.
+   */
   #createGameText(): void {
     const { width } = this.scale;
     this.#currentPlayerTurnText = this.add
@@ -169,18 +200,30 @@ export class GameScene extends Phaser.Scene {
       .setDepth(5);
   }
 
+  /**
+   * Disables input handling on the Phaser game instance. Will become unlocked once it is this players turn.
+   * Note: this currently does not lock the input since both players playing locally.
+   */
   #disableInput(): void {
     this.input.enabled = true;
     this.#gamePiece.setVisible(true);
     this.#currentPlayerTurnText.setText('Player Twos turn');
   }
 
+  /**
+   * Re-enables the input handling on the Phaser game instance once the game is ready to begin, or when it is
+   * this players turn.
+   */
   #enableInput(): void {
     this.input.enabled = true;
     this.#gamePiece.setVisible(true);
     this.#currentPlayerTurnText.setText('Player Ones turn');
   }
 
+  /**
+   * Used to empty all of the game pieces out of the Connect Four board once the players are ready
+   * to start a new game.
+   */
   #clearPieces(): void {
     this.add.tween({
       targets: this.#gamePieceContainer,

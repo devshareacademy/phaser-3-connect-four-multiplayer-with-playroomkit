@@ -1,3 +1,7 @@
+/**
+ * Contains common configuration, types, and functions that are used throughout our game.
+ */
+
 export const GAME_ASSETS = {
   RED_PIECE: 'RED_PIECE',
   YELLOW_PIECE: 'YELLOW_PIECE',
