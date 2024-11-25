@@ -15,6 +15,7 @@ import {
 } from '../common';
 import { LocalService } from '../services/local-service';
 import { Service } from '../services/service';
+import { PlayroomService } from '../services/playroom-service';
 
 export class GameScene extends Phaser.Scene {
   #service!: Service;
@@ -32,7 +33,8 @@ export class GameScene extends Phaser.Scene {
     this.input.enabled = false;
 
     // create game service
-    this.#service = new LocalService();
+    // this.#service = new LocalService();
+    this.#service = new PlayroomService();
 
     // Create game objects
     this.#createGameText();

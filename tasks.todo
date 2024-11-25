@@ -28,3 +28,8 @@
   - this lays the groundwork for how we want our other services to work
   - start by moving the make move logic
   - then create the start game logic to show we are waiting for a game (once we have online multiplayer)
+- review playroomkit
+  - review the service, documentation, and how to install locally
+  - our project is already setup for this, but review what libraries are needed
+  - for this show, the website and some of the features
+- create playroom service instance

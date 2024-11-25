@@ -1,5 +1,5 @@
 import { Service } from './service';
-import { CUSTOM_GAME_EVENTS, GamePieceAddedEventData } from '../common';
+import { CUSTOM_GAME_EVENTS, GAME_STATE, GamePieceAddedEventData } from '../common';
 
 export class LocalService extends Service {
   constructor() {
@@ -14,6 +14,8 @@ export class LocalService extends Service {
     return new Promise((resolve) => {
       resolve(true);
 
+      // update local game state to show we have both players
+      this._gameState = GAME_STATE.PLAYING;
       // emit event about new game starting since both players are local
       this._events.emit(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED);
     });
