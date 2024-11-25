@@ -2,6 +2,8 @@
  * Contains common configuration, types, and functions that are used throughout our game.
  */
 
+import { ConnectFourData } from '@devshareacademy/connect-four';
+
 export const GAME_ASSETS = {
   RED_PIECE: 'RED_PIECE',
   YELLOW_PIECE: 'YELLOW_PIECE',
@@ -27,3 +29,22 @@ export function sleep(scene: Phaser.Scene, ms: number): Promise<void> {
     });
   });
 }
+
+export const GAME_STATE = {
+  WAITING_FOR_PLAYERS: 'WAITING_FOR_PLAYERS',
+  PLAYING: 'PLAYING',
+  FINISHED: 'FINISHED',
+} as const;
+
+export type GameState = keyof typeof GAME_STATE;
+
+export const CUSTOM_GAME_EVENTS = {
+  GAME_PIECE_ADDED: 'GAME_PIECE_ADDED',
+  NEW_GAME_STARTED: 'NEW_GAME_STARTED',
+};
+export type CustomGameEvents = keyof typeof CUSTOM_GAME_EVENTS;
+
+export type GamePieceAddedEventData = {
+  coordinate: ConnectFourData.Coordinate;
+  player: ConnectFourData.Player;
+};

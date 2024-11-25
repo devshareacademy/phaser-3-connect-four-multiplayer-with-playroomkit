@@ -1,0 +1,30 @@
+- review starting project template
+- review how we want to decouple our code
+  - for this we can use excalidraw, show diagram of how our phaser logic and game logic our coupled together
+  - we want to split these two things out, rendering and input will be phaser, our game logic will live elsewhere (a service)
+  - now, for our service, this will be responsible for updating our local connect four game state, and for communicating
+  - with the phaser game, that way we can enable/disable input, update the rendering of our current game state, etc
+  - the service will be responsible for interacting with whatever we want our game to be (local, online, etc)
+  - for online, the service will be getting data from a third party (could be a peer, api, cloud service, websocket, etc)
+  - the service will then translate those messages and update our state and pass that event data to our phaser game
+  - for showing this, it will be a simple architecture diagram that shows flows, and then we can design the class for service
+  - will be high level with methods and properties we need
+  - now show a simple state diagram for our existing game and what we need to add to support multiplayer
+  - it would be user visits game -> load game assets -> show demo/title scene -> click -> game scene -> play -> game over -> back to start
+  - now once we get to game scene, we want to launch our service and connect, once connected we now wait for players, once we have 2
+  - we start the game (will need to show what happens when players leave, etc)
+  - for this, we will add a very simple game state, waiting, connected, started, etc show states based on game code
+  - after we finish reviewing, just into creating the new service class definition
+- create abstract service class
+  - class is responsible for abstracting away the actual connect four logic from the phaser game logic
+  - meant to be extended by services we want to integrate with (playroomkit, colyseus, socket.io, local, etc)
+  - each service would have the logic needed for connecting to those services (act like a connector)
+  - the service will communicate with the phaser scene by sending game events on an event emitter with the goal
+  - of the phaser scene being to just to react to event changes and when there is input to notify the service
+- create local service instance
+  - goal of the local service is to show how we can decouple the game logic from our rendering and input logic
+  - in phaser, and show how we will use the events for communicating back to the phaser scene so we can react
+  - to events from the service
+  - this lays the groundwork for how we want our other services to work
+  - start by moving the make move logic
+  - then create the start game logic to show we are waiting for a game (once we have online multiplayer)

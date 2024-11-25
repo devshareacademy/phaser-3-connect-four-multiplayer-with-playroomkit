@@ -20,6 +20,6 @@ export class PreLoadScene extends Phaser.Scene {
   }
 
   public create(): void {
-    this.scene.start(SCENE_KEYS.TITLE);
+    this.scene.start(SCENE_KEYS.GAME);
   }
 }
