@@ -43,6 +43,8 @@ export abstract class Service {
     return this._playerTwoWinsText;
   }
 
+  abstract get playersTurnText(): string;
+
   abstract get isMyTurn(): boolean;
 
   public abstract connect(): Promise<boolean>;

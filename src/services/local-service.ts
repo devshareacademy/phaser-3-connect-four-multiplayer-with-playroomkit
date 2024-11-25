@@ -1,5 +1,6 @@
 import { Service } from './service';
 import { CUSTOM_GAME_EVENTS, GAME_STATE, GamePieceAddedEventData } from '../common';
+import { ConnectFourData } from '@devshareacademy/connect-four';
 
 export class LocalService extends Service {
   constructor() {
@@ -8,6 +9,13 @@ export class LocalService extends Service {
 
   get isMyTurn(): boolean {
     return true;
+  }
+
+  get playersTurnText(): string {
+    if (this._connectFour.playersTurn === ConnectFourData.PLAYER.ONE) {
+      return 'Player Ones turn';
+    }
+    return 'Player Twos turn';
   }
 
   public async connect(): Promise<boolean> {

@@ -64,6 +64,29 @@ export class PlayroomService extends Service {
     return false;
   }
 
+  get gameWinnerText(): string {
+    if (this._connectFour.gameWinner === undefined) {
+      return 'Draw';
+    }
+    const isFirstPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID) === Playroom.me().id;
+    const isSecondPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID) === Playroom.me().id;
+    if (
+      (this._connectFour.gameWinner === ConnectFourData.PLAYER.ONE && isFirstPlayer) ||
+      (this._connectFour.gameWinner === ConnectFourData.PLAYER.TWO && isSecondPlayer)
+    ) {
+      return 'You Win!';
+    }
+
+    return 'Opponent Won';
+  }
+
+  get playersTurnText(): string {
+    if (!this.isMyTurn) {
+      return 'Opponents turn';
+    }
+    return 'Your turn';
+  }
+
   public async connect(): Promise<boolean> {
     try {
       this.#registerEventListeners();
@@ -136,11 +159,12 @@ export class PlayroomService extends Service {
       await this.#handleExistingGameEvent(data);
     });
 
+    // event is triggered when a new game piece is added to a connect four game, will trigger for every player
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.GAME_PIECE_ADDED, async (data: GamePieceAddedEventData) => {
       await this.#handleGamePieceAddedEvent(data);
     });
 
-    // register listener for moves made by other players
+    // register listener for moves made by other players, will trigger just for the host player
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.MOVE_MADE, async (data: MoveMadeEventData) => {
       return new Promise(() => {
         console.log(`RPC: ${CUSTOM_PLAYROOM_EVENTS.MOVE_MADE} called`);
@@ -155,6 +179,20 @@ export class PlayroomService extends Service {
     });
   }
 
+  /**
+   * When a player joins our game, we can be in a variety of states:
+   *   1. the main player joined and started the game, and is now waiting for player two
+   *   2. both players joined the room, and the game state shows we are playing the game
+   *   3. a player reconnects, so the game is already in progress
+   *
+   * To account for this, we only want to start a connect four game once we have 2 players, either join
+   * at the same time, or one joins and then a second joins. Once we have both players, we should update
+   * our game state, and notify our Phaser Game so we can render out that the players can start playing.
+   *
+   * If a player leaves and comes back, or a different player joins, we need to emit a different event
+   * since the game is already in progress. This will let us notify the Phaser Game so we can update
+   * the local state to match the existing game state.
+   */
   #handlePlayerJoined(player: Playroom.PlayerState): void {
     // in case of duplicate events
     if (this.#playerStates[player.id]) {

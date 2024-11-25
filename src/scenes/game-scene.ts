@@ -3,7 +3,7 @@
  */
 
 import * as Phaser from 'phaser';
-import { ConnectFourData } from '@devshareacademy/connect-four';
+import { ConnectFourData, ConnectFourUtils } from '@devshareacademy/connect-four';
 import {
   CUSTOM_GAME_EVENTS,
   ExistingGameData,
@@ -14,9 +14,9 @@ import {
   GamePieceAddedEventData,
   SCENE_KEYS,
 } from '../common';
-import { LocalService } from '../services/local-service';
 import { Service } from '../services/service';
 import { PlayroomService } from '../services/playroom-service';
+import { LocalService } from '../services/local-service';
 
 export class GameScene extends Phaser.Scene {
   #service!: Service;
@@ -34,7 +34,7 @@ export class GameScene extends Phaser.Scene {
     this.input.enabled = false;
 
     // create game service
-    // this.#service = new LocalService();
+    //this.#service = new LocalService();
     this.#service = new PlayroomService();
 
     // Create game objects
@@ -222,7 +222,7 @@ export class GameScene extends Phaser.Scene {
   #disableInput(): void {
     this.input.enabled = false;
     this.#gamePiece.setVisible(false);
-    this.#currentPlayerTurnText.setText('Player Twos turn');
+    this.#currentPlayerTurnText.setText(this.#service.playersTurnText);
   }
 
   /**
@@ -232,7 +232,7 @@ export class GameScene extends Phaser.Scene {
   #enableInput(): void {
     this.input.enabled = true;
     this.#gamePiece.setVisible(true);
-    this.#currentPlayerTurnText.setText(`Player ${this.#service.currentPlayer} turn`);
+    this.#currentPlayerTurnText.setText(this.#service.playersTurnText);
   }
 
   /**
@@ -268,8 +268,21 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.#service.events.once(CUSTOM_GAME_EVENTS.EXISTING_GAME, (data: ExistingGameData) => {
-      // TODO
-      console.log(data);
+      // update our board state to match the existing game state
+      data.board.forEach((val, idx) => {
+        if (val === 0) {
+          return;
+        }
+        const coordinate = ConnectFourUtils.get2DPosition(idx);
+        const player = val === 1 ? ConnectFourData.PLAYER.ONE : ConnectFourData.PLAYER.TWO;
+        this.#createGamePiece(coordinate.row, coordinate.col, player, true);
+      });
+
+      // update game piece to reflect current player
+      const nextPlayerAssetKey =
+        this.#service.currentPlayer === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.RED_PIECE : GAME_ASSETS.YELLOW_PIECE;
+      this.#gamePiece.setTexture(nextPlayerAssetKey);
+
       this.#checkForGameOver();
     });
   }
