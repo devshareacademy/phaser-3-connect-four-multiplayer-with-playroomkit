@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import * as Playroom from 'playroomkit';
 import { Service } from './service';
 import { CUSTOM_GAME_EVENTS, ExistingGameData, GAME_STATE, GameState } from '../common';
+import { ConnectFourData } from '@devshareacademy/connect-four';
 
 const PLAYROOM_STATE_KEYS = {
   GAME_STATE: 'GAME_STATE',
@@ -14,6 +15,8 @@ const CUSTOM_PLAYROOM_EVENTS = {
   PLAYER_CONNECTED: 'PLAYER_CONNECTED',
   NEW_GAME_STARTED: 'NEW_GAME_STARTED',
   EXISTING_GAME: 'EXISTING_GAME',
+  GAME_PIECE_ADDED: 'GAME_PIECE_ADDED',
+  MOVE_MADE: 'MOVE_MADE',
 } as const;
 
 type PlayerConnectedEventData = {
@@ -22,6 +25,15 @@ type PlayerConnectedEventData = {
 
 type ExistingGameEventData = {
   playerId: string;
+};
+
+type GamePieceAddedEventData = {
+  coordinate: ConnectFourData.Coordinate;
+  player: ConnectFourData.Player;
+};
+
+export type MoveMadeEventData = {
+  col: number;
 };
 
 export class PlayroomService extends Service {
@@ -35,7 +47,21 @@ export class PlayroomService extends Service {
   }
 
   get isMyTurn(): boolean {
-    return true;
+    const isFirstPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID) === Playroom.me().id;
+    const isSecondPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID) === Playroom.me().id;
+    console.log(
+      `isMyTurn called, firstPlayer: ${isFirstPlayer.toString()}, secondPlayer: ${isSecondPlayer.toString()}`,
+    );
+    if (!isFirstPlayer && !isSecondPlayer) {
+      return false;
+    }
+    if (this._connectFour.playersTurn === ConnectFourData.PLAYER.ONE && isFirstPlayer) {
+      return true;
+    }
+    if (this._connectFour.playersTurn === ConnectFourData.PLAYER.TWO && isSecondPlayer) {
+      return true;
+    }
+    return false;
   }
 
   public async connect(): Promise<boolean> {
@@ -74,7 +100,23 @@ export class PlayroomService extends Service {
   }
 
   public makeMove(col: number): void {
-    // TODO
+    if (!this.isMyTurn) {
+      return;
+    }
+
+    // if we are the host player, update game state and notify other players
+    if (Playroom.isHost()) {
+      this.#handleMoveMadeEvent(col);
+      return;
+    }
+
+    // if we are not the host, emit event so host can update game state and update all players
+    const data: MoveMadeEventData = {
+      col,
+    };
+    Playroom.RPC.call(CUSTOM_PLAYROOM_EVENTS.MOVE_MADE, data, Playroom.RPC.Mode.HOST).catch((error) => {
+      console.log(error);
+    });
   }
 
   #registerEventListeners(): void {
@@ -92,6 +134,18 @@ export class PlayroomService extends Service {
     // if a player leaves and new player joins
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.EXISTING_GAME, async (data: ExistingGameEventData) => {
       await this.#handleExistingGameEvent(data);
+    });
+
+    Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.GAME_PIECE_ADDED, async (data: GamePieceAddedEventData) => {
+      await this.#handleGamePieceAddedEvent(data);
+    });
+
+    // register listener for moves made by other players
+    Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.MOVE_MADE, async (data: MoveMadeEventData) => {
+      return new Promise(() => {
+        console.log(`RPC: ${CUSTOM_PLAYROOM_EVENTS.MOVE_MADE} called`);
+        this.#handleMoveMadeEvent(data.col);
+      });
     });
 
     // callback to allow us to run logic for when a player joins and leaves a room, allows us to setup and cleanup state
@@ -210,6 +264,30 @@ export class PlayroomService extends Service {
         board: this._connectFour.board,
       };
       this._events.emit(CUSTOM_GAME_EVENTS.EXISTING_GAME, existingGameData);
+    });
+  }
+
+  #handleMoveMadeEvent(col: number): void {
+    const currentPlayer = this._connectFour.playersTurn;
+    const coordinate = this._connectFour.makeMove(col);
+    Playroom.setState(PLAYROOM_STATE_KEYS.MOVES_MADE, this._connectFour.moveHistory);
+
+    const data: GamePieceAddedEventData = {
+      coordinate,
+      player: currentPlayer,
+    };
+    Playroom.RPC.call(CUSTOM_PLAYROOM_EVENTS.GAME_PIECE_ADDED, data, Playroom.RPC.Mode.ALL).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  async #handleGamePieceAddedEvent(data: GamePieceAddedEventData): Promise<void> {
+    return new Promise(() => {
+      console.log(`RPC: ${CUSTOM_PLAYROOM_EVENTS.GAME_PIECE_ADDED} called`);
+      if (!Playroom.isHost()) {
+        this._connectFour.makeMove(data.coordinate.col);
+      }
+      this._events.emit(CUSTOM_GAME_EVENTS.GAME_PIECE_ADDED, data);
     });
   }
 }
