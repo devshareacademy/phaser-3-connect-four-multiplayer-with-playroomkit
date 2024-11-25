@@ -41,10 +41,15 @@ export type GameState = keyof typeof GAME_STATE;
 export const CUSTOM_GAME_EVENTS = {
   GAME_PIECE_ADDED: 'GAME_PIECE_ADDED',
   NEW_GAME_STARTED: 'NEW_GAME_STARTED',
+  EXISTING_GAME: 'EXISTING_GAME',
 };
 export type CustomGameEvents = keyof typeof CUSTOM_GAME_EVENTS;
 
 export type GamePieceAddedEventData = {
   coordinate: ConnectFourData.Coordinate;
   player: ConnectFourData.Player;
+};
+
+export type ExistingGameData = {
+  board: ConnectFourData.CellRange[];
 };

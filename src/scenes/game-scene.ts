@@ -6,6 +6,7 @@ import * as Phaser from 'phaser';
 import { ConnectFourData } from '@devshareacademy/connect-four';
 import {
   CUSTOM_GAME_EVENTS,
+  ExistingGameData,
   FRAME_SIZE,
   GAME_ASSETS,
   GAME_HEIGHT,
@@ -264,6 +265,12 @@ export class GameScene extends Phaser.Scene {
     this.#service.events.once(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED, () => {
       console.log(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED);
       this.#handleGameStarted();
+    });
+
+    this.#service.events.once(CUSTOM_GAME_EVENTS.EXISTING_GAME, (data: ExistingGameData) => {
+      // TODO
+      console.log(data);
+      this.#checkForGameOver();
     });
   }
 
