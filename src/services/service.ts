@@ -13,8 +13,8 @@ export abstract class Service {
     this._events = new Phaser.Events.EventEmitter();
     this._connectFour = new ConnectFour();
     this._gameState = GAME_STATE.WAITING_FOR_PLAYERS;
-    this._playerOneWinsText = `Player One Wins!`;
-    this._playerTwoWinsText = `Player Two Wins!`;
+    this._playerOneWinsText = 'Player One Wins!';
+    this._playerTwoWinsText = 'Player Two Wins!';
   }
 
   get events(): Phaser.Events.EventEmitter {
