@@ -39,3 +39,9 @@ you should be able to open `http://myserver.com/index.html` and play your game.
 ### Static Assets
 
 Any static assets like images or audio files should be placed in the `public` folder. It'll then be served at `http://localhost:8080/path-to-file-your-file/file-name.file-type`.
+
+
+https://docs.joinplayroom.com/
+https://docs.joinplayroom.com/blog/multiplayerhard
+https://joinplayroom.com/
+https://github.com/devshareacademy/phaser-3-connect-four-multiplayer-with-playroomkit/releases/tag/initial-project
