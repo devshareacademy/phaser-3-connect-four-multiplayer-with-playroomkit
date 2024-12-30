@@ -3,11 +3,23 @@
  */
 
 import * as Phaser from 'phaser';
-import { ConnectFour, ConnectFourData } from '@devshareacademy/connect-four';
-import { FRAME_SIZE, GAME_ASSETS, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../common';
+import { ConnectFour, ConnectFourData, ConnectFourUtils } from '@devshareacademy/connect-four';
+import {
+  CUSTOM_GAME_EVENTS,
+  ExistingGameData,
+  FRAME_SIZE,
+  GAME_ASSETS,
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  GamePieceAddedEventData,
+  SCENE_KEYS,
+} from '../common';
+import { Service } from '../services/service';
+import { PlayroomService } from '../services/playroom-service';
+// import { LocalService } from '../services/local-service';
 
 export class GameScene extends Phaser.Scene {
-  #connectFour!: ConnectFour;
+  #service!: Service;
   #gamePiece!: Phaser.GameObjects.Image;
   #boardContainer!: Phaser.GameObjects.Container;
   #gamePieceContainer!: Phaser.GameObjects.Container;
@@ -17,23 +29,28 @@ export class GameScene extends Phaser.Scene {
     super({ key: SCENE_KEYS.GAME });
   }
 
-  public init() {
-    this.#connectFour = new ConnectFour();
-  }
-
   public create(): void {
     // disable input by default
     this.input.enabled = false;
+
+    // create game service
+    // this.#service = new LocalService();
+    this.#service = new PlayroomService();
 
     // Create game objects
     this.#createGameText();
     this.#createBoard();
     this.#createInputColumns();
-    this.#enableInput();
+    this.#registerEventListeners();
 
     this.cameras.main.fadeIn(1000, 31, 50, 110);
     this.cameras.main.on(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, async () => {
-      // to be implemented
+      const connected = await this.#service.connect();
+      if (!connected) {
+        console.log('failed to connect to service');
+        return;
+      }
+      console.log('connected to service');
     });
   }
 
@@ -57,7 +74,10 @@ export class GameScene extends Phaser.Scene {
     const columnIndexKey = 'columnIndex';
 
     // create game piece for showing selected column
-    this.#gamePiece = this.add.image(0, -FRAME_SIZE * 3.45, GAME_ASSETS.RED_PIECE).setDepth(1);
+    this.#gamePiece = this.add
+      .image(0, -FRAME_SIZE * 3.45, GAME_ASSETS.RED_PIECE)
+      .setDepth(1)
+      .setVisible(false);
     this.#boardContainer.add(this.#gamePiece);
 
     // create the columns for the game and make them interactive
@@ -73,20 +93,22 @@ export class GameScene extends Phaser.Scene {
       this.#boardContainer.add([zone]);
 
       zone.on(Phaser.Input.Events.POINTER_OVER, () => {
-        if (this.#connectFour.isGameOver) {
+        if (this.#service.isGameOver) {
           return;
         }
         this.#gamePiece.setX((zone.getData(columnIndexKey) as number) * FRAME_SIZE);
       });
 
       zone.on(Phaser.Input.Events.POINTER_DOWN, () => {
-        if (this.#connectFour.isGameOver) {
+        if (this.#service.isGameOver) {
           return;
         }
 
-        const currentPlayer = this.#connectFour.playersTurn;
-        const coordinate = this.#connectFour.makeMove(zone.getData(columnIndexKey) as number);
-        this.#addGamePiece(coordinate.row, coordinate.col, currentPlayer);
+        // const currentPlayer = this.#connectFour.playersTurn;
+        // const coordinate = this.#connectFour.makeMove(zone.getData(columnIndexKey) as number);
+        // this.#addGamePiece(coordinate.row, coordinate.col, currentPlayer);
+        this.input.enabled = false;
+        this.#service.makeMove(zone.getData(columnIndexKey) as number);
       });
     }
   }
@@ -146,8 +168,8 @@ export class GameScene extends Phaser.Scene {
    * if no one has one, the game will continue to the next player.
    */
   #checkForGameOver(): void {
-    if (!this.#connectFour.isGameOver) {
-      if (this.#connectFour.playersTurn === ConnectFourData.PLAYER.ONE) {
+    if (!this.#service.isGameOver) {
+      if (this.#service.isMyTurn) {
         this.#enableInput();
       } else {
         this.#disableInput();
@@ -161,13 +183,8 @@ export class GameScene extends Phaser.Scene {
 
     this.add.rectangle(this.scale.width / 2, this.scale.height / 2, GAME_WIDTH - 40, 140, 0x1f326e, 0.8).setDepth(4);
 
-    let winText = 'Draw';
-    if (this.#connectFour.gameWinner) {
-      winText = `Player ${this.#connectFour.gameWinner} Wins!`;
-    }
-
     this.add
-      .text(this.scale.width / 2, this.scale.height / 2 - 20, winText, {
+      .text(this.scale.width / 2, this.scale.height / 2 - 20, this.#service.gameWinnerText, {
         fontSize: '64px',
         fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
       })
@@ -192,7 +209,7 @@ export class GameScene extends Phaser.Scene {
   #createGameText(): void {
     const { width } = this.scale;
     this.#currentPlayerTurnText = this.add
-      .text(width / 2, 50, '', {
+      .text(width / 2, 50, 'Waiting', {
         fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
         fontSize: '64px',
       })
@@ -205,9 +222,9 @@ export class GameScene extends Phaser.Scene {
    * Note: this currently does not lock the input since both players playing locally.
    */
   #disableInput(): void {
-    this.input.enabled = true;
-    this.#gamePiece.setVisible(true);
-    this.#currentPlayerTurnText.setText('Player Twos turn');
+    this.input.enabled = false;
+    this.#gamePiece.setVisible(false);
+    this.#currentPlayerTurnText.setText(this.#service.playersTurnText);
   }
 
   /**
@@ -217,7 +234,7 @@ export class GameScene extends Phaser.Scene {
   #enableInput(): void {
     this.input.enabled = true;
     this.#gamePiece.setVisible(true);
-    this.#currentPlayerTurnText.setText('Player Ones turn');
+    this.#currentPlayerTurnText.setText(this.#service.playersTurnText);
   }
 
   /**
@@ -236,6 +253,44 @@ export class GameScene extends Phaser.Scene {
           window.location.replace('/');
         });
       },
+    });
+  }
+
+  #registerEventListeners(): void {
+    this.#service.events.on(CUSTOM_GAME_EVENTS.GAME_PIECE_ADDED, (data: GamePieceAddedEventData) => {
+      this.#addGamePiece(data.coordinate.row, data.coordinate.col, data.player);
+    });
+
+    this.#service.events.on(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED, () => {
+      this.#handleGameStarted();
+    });
+
+    this.#service.events.on(CUSTOM_GAME_EVENTS.EXISTING_GAME, (data: ExistingGameData) => {
+      data.board.forEach((val, index) => {
+        if (val === 0) {
+          return;
+        }
+        const coordinate = ConnectFourUtils.get2DPosition(index);
+        const player = val === 1 ? ConnectFourData.PLAYER.ONE : ConnectFourData.PLAYER.TWO;
+        this.#createGamePiece(coordinate.row, coordinate.col, player, true);
+      });
+
+      const nextPlayerAssetKey =
+        this.#service.currentPlayer === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.RED_PIECE : GAME_ASSETS.YELLOW_PIECE;
+      this.#gamePiece.setTexture(nextPlayerAssetKey);
+
+      this.#checkForGameOver();
+    });
+  }
+
+  #handleGameStarted(): void {
+    this.#currentPlayerTurnText.setText('');
+    this.time.delayedCall(1000, () => {
+      if (this.#service.isMyTurn) {
+        this.#enableInput();
+        return;
+      }
+      this.#disableInput();
     });
   }
 }

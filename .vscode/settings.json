@@ -11,5 +11,8 @@
     "Colyseus",
     "devshareacademy",
     "spritesheet"
-  ]
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
