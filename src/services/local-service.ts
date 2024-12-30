@@ -1,5 +1,5 @@
 import { ConnectFourData } from '@devshareacademy/connect-four';
-import { CUSTOM_GAME_EVENTS, GamePieceAddedEventData } from '../common';
+import { CUSTOM_GAME_EVENTS, GAME_STATE, GamePieceAddedEventData } from '../common';
 import { Service } from './service';
 
 export class LocalService extends Service {
@@ -18,6 +18,9 @@ export class LocalService extends Service {
     return new Promise((resolve) => {
       resolve(true);
 
+      // update local game state to show we have both players
+      this._gameState = GAME_STATE.PLAYING;
+      // emit event about new game starting since both players are local
       this._events.emit(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED);
     });
   }
@@ -26,6 +29,7 @@ export class LocalService extends Service {
     const currentPlayer = this._connectFour.playersTurn;
     const coordinate = this._connectFour.makeMove(col);
 
+    // emit event about game piece being added
     const data: GamePieceAddedEventData = {
       coordinate,
       player: currentPlayer,

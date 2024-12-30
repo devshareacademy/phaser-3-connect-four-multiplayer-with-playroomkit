@@ -49,6 +49,9 @@ export class PlayroomService extends Service {
   get isMyTurn(): boolean {
     const isFirstPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID) === Playroom.me().id;
     const isSecondPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID) === Playroom.me().id;
+    console.log(
+      `isMyTurn called, firstPlayer: ${isFirstPlayer.toString()}, secondPlayer: ${isSecondPlayer.toString()}`,
+    );
     if (this._connectFour.playersTurn === ConnectFourData.PLAYER.ONE && isFirstPlayer) {
       return true;
     }
@@ -62,10 +65,8 @@ export class PlayroomService extends Service {
     if (this._connectFour.gameWinner === undefined) {
       return 'Draw';
     }
-
     const isFirstPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID) === Playroom.me().id;
     const isSecondPlayer = Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID) === Playroom.me().id;
-
     if (
       (this._connectFour.gameWinner === ConnectFourData.PLAYER.ONE && isFirstPlayer) ||
       (this._connectFour.gameWinner === ConnectFourData.PLAYER.TWO && isSecondPlayer)
@@ -97,6 +98,7 @@ export class PlayroomService extends Service {
         },
       });
 
+      // after insertCoin resolves, this player is now connected to a Playroom kit Room, and so we should have player profile information
       const playerConnectedData: PlayerConnectedEventData = {
         playerId: Playroom.me().id,
       };
@@ -105,9 +107,10 @@ export class PlayroomService extends Service {
           console.log(error);
         },
       );
+
       return true;
     } catch (error) {
-      console.error(error);
+      console.log(error);
       return false;
     }
   }
@@ -116,11 +119,14 @@ export class PlayroomService extends Service {
     if (!this.isMyTurn) {
       return;
     }
-    console.log('make move called with col: ', col);
+
+    // if we are the host player, update game state and notify other players
     if (Playroom.isHost()) {
       this.#handleMoveMadeEvent(col);
       return;
     }
+
+    // if we are not the host, emit event so host can update game state and update all players
     const data: MoveMadeEventData = {
       col,
     };
@@ -130,28 +136,37 @@ export class PlayroomService extends Service {
   }
 
   #registerEventListeners(): void {
+    // event is triggered once a new player has connected to the Playroom Room, will trigger for every player
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.PLAYER_CONNECTED, async (data: PlayerConnectedEventData) => {
       await this.#handlePlayerConnectedEvent(data);
     });
 
+    // event is triggered once we have two players for a game, and we create a new game instance, will trigger for every player
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.NEW_GAME_STARTED, async () => {
       await this.#handleNewGameStartedEvent();
     });
 
+    // event is triggered when a player joins an existing Connect Four game, this could happen if a player disconnects and reconnects,
+    // if a player leaves and new player joins
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.EXISTING_GAME, async (data: ExistingGameEventData) => {
       await this.#handleExistingGameEvent(data);
     });
 
+    // event is triggered when a new game piece is added to a connect four game, will trigger for every player
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.GAME_PIECE_ADDED, async (data: GamePieceAddedEventData) => {
       await this.#handleGamePieceAddedEvent(data);
     });
 
+    // register listener for moves made by other players, will trigger just for the host player
     Playroom.RPC.register(CUSTOM_PLAYROOM_EVENTS.MOVE_MADE, async (data: MoveMadeEventData) => {
       return new Promise(() => {
+        console.log(`RPC: ${CUSTOM_PLAYROOM_EVENTS.MOVE_MADE} called`);
         this.#handleMoveMadeEvent(data.col);
       });
     });
 
+    // callback to allow us to run logic for when a player joins and leaves a room, allows us to setup and cleanup state
+    // in our game
     Playroom.onPlayerJoin((player: Playroom.PlayerState) => {
       this.#handlePlayerJoined(player);
     });
@@ -187,6 +202,7 @@ export class PlayroomService extends Service {
       delete this.#playerStates[playerThatLeft.id];
       this.#playerIds.delete(playerThatLeft.id);
 
+      // when player leaves, we need make sure we assign next player to that players spot (1 or 2)
       if (playerThatLeft.id === Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID)) {
         Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID, '');
         return;
@@ -199,14 +215,16 @@ export class PlayroomService extends Service {
     return new Promise(() => {
       this._gameState = Playroom.getState(PLAYROOM_STATE_KEYS.GAME_STATE) as GameState;
 
+      // if we don't have two players, or this player is not host, there is nothing else to do
       if (this.#playerIds.size !== 2 || !Playroom.isHost()) {
         return;
       }
 
       console.log(`RPC: ${CUSTOM_PLAYROOM_EVENTS.PLAYER_CONNECTED} called with ${data.playerId}`);
       const playerIds = Array.from(this.#playerIds);
-      console.log(playerIds);
+      console.log(playerIds, this.gameState);
 
+      // starting a new connect four game since we have two players
       if (this._gameState === GAME_STATE.WAITING_FOR_PLAYERS) {
         const firstPlayerId = Phaser.Math.RND.pick(playerIds);
         const otherPlayerId = playerIds.filter((id) => id !== firstPlayerId)[0];
@@ -215,20 +233,35 @@ export class PlayroomService extends Service {
         Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID, firstPlayerId);
         Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID, otherPlayerId);
         Playroom.setState(PLAYROOM_STATE_KEYS.GAME_STATE, GAME_STATE.PLAYING);
+        // notify all players that game is starting
         Playroom.RPC.call(CUSTOM_PLAYROOM_EVENTS.NEW_GAME_STARTED, undefined, Playroom.RPC.Mode.ALL).catch((error) => {
           console.log(error);
         });
         return;
       }
 
+      // existing game state found, either existing player rejoined or a new player replaced an old player, so we need to update ids
+      console.log(
+        'Player ids before update: ',
+        Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID),
+        Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID),
+      );
+
       if (Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID) === '') {
         Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID, data.playerId);
       } else if (Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID) === '') {
         Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID, data.playerId);
       }
+
+      console.log(
+        'Player ids after update: ',
+        Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID),
+        Playroom.getState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID),
+      );
       const existingGameData: ExistingGameEventData = {
         playerId: data.playerId,
       };
+      // notify all players that there is an existing game
       Playroom.RPC.call(CUSTOM_PLAYROOM_EVENTS.EXISTING_GAME, existingGameData, Playroom.RPC.Mode.ALL).catch(
         (error) => {
           console.log(error);
@@ -251,8 +284,8 @@ export class PlayroomService extends Service {
       if (data.playerId !== Playroom.me().id) {
         return;
       }
-
       console.log('updating local connect four state');
+      // grab existing moves from game state and update local instance of game
       const existingPlayerMoves = Playroom.getState(PLAYROOM_STATE_KEYS.MOVES_MADE) as number[];
       existingPlayerMoves.forEach((move) => {
         this._connectFour.makeMove(move);
@@ -265,7 +298,6 @@ export class PlayroomService extends Service {
   }
 
   #handleMoveMadeEvent(col: number): void {
-    console.log('handleMoveMadeEvent called with col: ', col);
     const currentPlayer = this._connectFour.playersTurn;
     const coordinate = this._connectFour.makeMove(col);
     Playroom.setState(PLAYROOM_STATE_KEYS.MOVES_MADE, this._connectFour.moveHistory);
