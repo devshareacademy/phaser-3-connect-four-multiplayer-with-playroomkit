@@ -52,9 +52,6 @@ export class PlayroomService extends Service {
     console.log(
       `isMyTurn called, firstPlayer: ${isFirstPlayer.toString()}, secondPlayer: ${isSecondPlayer.toString()}`,
     );
-    if (!isFirstPlayer && !isSecondPlayer) {
-      return false;
-    }
     if (this._connectFour.playersTurn === ConnectFourData.PLAYER.ONE && isFirstPlayer) {
       return true;
     }
@@ -92,16 +89,12 @@ export class PlayroomService extends Service {
       this.#registerEventListeners();
 
       await Playroom.insertCoin({
-        streamMode: false,
-        enableBots: false,
-        matchmaking: false,
         maxPlayersPerRoom: 2,
-        skipLobby: false,
         defaultStates: {
-          [PLAYROOM_STATE_KEYS.MOVES_MADE]: [],
+          [PLAYROOM_STATE_KEYS.GAME_STATE]: GAME_STATE.WAITING_FOR_PLAYERS,
           [PLAYROOM_STATE_KEYS.PLAYER_ONE_ID]: '',
           [PLAYROOM_STATE_KEYS.PLAYER_TWO_ID]: '',
-          [PLAYROOM_STATE_KEYS.GAME_STATE]: GAME_STATE.WAITING_FOR_PLAYERS,
+          [PLAYROOM_STATE_KEYS.MOVES_MADE]: [],
         },
       });
 
@@ -232,17 +225,16 @@ export class PlayroomService extends Service {
       console.log(playerIds, this.gameState);
 
       // starting a new connect four game since we have two players
-      if (this.gameState === GAME_STATE.WAITING_FOR_PLAYERS) {
+      if (this._gameState === GAME_STATE.WAITING_FOR_PLAYERS) {
         const firstPlayerId = Phaser.Math.RND.pick(playerIds);
-        // const firstPlayerId = playerIds.filter((id) => id !== Playroom.me().id)[0];
         const otherPlayerId = playerIds.filter((id) => id !== firstPlayerId)[0];
         console.log('first player id: ', firstPlayerId);
         console.log('other player id: ', otherPlayerId);
         Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_ONE_ID, firstPlayerId);
-        Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID, playerIds.filter((id) => id !== firstPlayerId)[0]);
+        Playroom.setState(PLAYROOM_STATE_KEYS.PLAYER_TWO_ID, otherPlayerId);
         Playroom.setState(PLAYROOM_STATE_KEYS.GAME_STATE, GAME_STATE.PLAYING);
         // notify all players that game is starting
-        Playroom.RPC.call(CUSTOM_PLAYROOM_EVENTS.NEW_GAME_STARTED, Playroom.RPC.Mode.ALL).catch((error) => {
+        Playroom.RPC.call(CUSTOM_PLAYROOM_EVENTS.NEW_GAME_STARTED, undefined, Playroom.RPC.Mode.ALL).catch((error) => {
           console.log(error);
         });
         return;
@@ -288,7 +280,7 @@ export class PlayroomService extends Service {
 
   async #handleExistingGameEvent(data: ExistingGameEventData): Promise<void> {
     return new Promise(() => {
-      console.log(`RPC: ${CUSTOM_PLAYROOM_EVENTS.EXISTING_GAME} called`, data.playerId);
+      console.log(`RPC: ${CUSTOM_PLAYROOM_EVENTS.EXISTING_GAME} called with player id ${data.playerId}`);
       if (data.playerId !== Playroom.me().id) {
         return;
       }
