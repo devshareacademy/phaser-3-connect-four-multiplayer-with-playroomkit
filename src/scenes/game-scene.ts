@@ -103,10 +103,6 @@ export class GameScene extends Phaser.Scene {
         if (this.#service.isGameOver) {
           return;
         }
-
-        // const currentPlayer = this.#connectFour.playersTurn;
-        // const coordinate = this.#connectFour.makeMove(zone.getData(columnIndexKey) as number);
-        // this.#addGamePiece(coordinate.row, coordinate.col, currentPlayer);
         this.input.enabled = false;
         this.#service.makeMove(zone.getData(columnIndexKey) as number);
       });
