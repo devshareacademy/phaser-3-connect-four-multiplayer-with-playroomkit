@@ -3,7 +3,7 @@
  */
 
 import * as Phaser from 'phaser';
-import { ConnectFour, ConnectFourData, ConnectFourUtils } from '@devshareacademy/connect-four';
+import { ConnectFourData, ConnectFourUtils } from '@devshareacademy/connect-four';
 import {
   CUSTOM_GAME_EVENTS,
   ExistingGameData,
@@ -47,6 +47,8 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.on(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, async () => {
       const connected = await this.#service.connect();
       if (!connected) {
+        // here we would want to do something graceful with an online service, like
+        // fallback to local play, play with bots, etc.
         console.log('failed to connect to service');
         return;
       }
@@ -205,7 +207,7 @@ export class GameScene extends Phaser.Scene {
   #createGameText(): void {
     const { width } = this.scale;
     this.#currentPlayerTurnText = this.add
-      .text(width / 2, 50, 'Waiting', {
+      .text(width / 2, 50, 'Waiting...', {
         fontFamily: GAME_ASSETS.DANCING_SCRIPT_FONT,
         fontSize: '64px',
       })
@@ -253,15 +255,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   #registerEventListeners(): void {
+    // after a player has made a move, the service will notify our Phaser game that we need to add a new game object
     this.#service.events.on(CUSTOM_GAME_EVENTS.GAME_PIECE_ADDED, (data: GamePieceAddedEventData) => {
+      console.log(CUSTOM_GAME_EVENTS.GAME_PIECE_ADDED);
       this.#addGamePiece(data.coordinate.row, data.coordinate.col, data.player);
     });
 
-    this.#service.events.on(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED, () => {
+    // wait until both players are connected before allowing the player to play the game
+    this.#service.events.once(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED, () => {
+      console.log(CUSTOM_GAME_EVENTS.NEW_GAME_STARTED);
       this.#handleGameStarted();
     });
 
-    this.#service.events.on(CUSTOM_GAME_EVENTS.EXISTING_GAME, (data: ExistingGameData) => {
+    this.#service.events.once(CUSTOM_GAME_EVENTS.EXISTING_GAME, (data: ExistingGameData) => {
+      // update our board state to match the existing game state
       data.board.forEach((val, index) => {
         if (val === 0) {
           return;
@@ -271,6 +278,7 @@ export class GameScene extends Phaser.Scene {
         this.#createGamePiece(coordinate.row, coordinate.col, player, true);
       });
 
+      // update game piece to reflect current player
       const nextPlayerAssetKey =
         this.#service.currentPlayer === ConnectFourData.PLAYER.ONE ? GAME_ASSETS.RED_PIECE : GAME_ASSETS.YELLOW_PIECE;
       this.#gamePiece.setTexture(nextPlayerAssetKey);
