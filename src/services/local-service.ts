@@ -14,7 +14,7 @@ export class LocalService extends Service {
     return 'Player Twos turn';
   }
 
-  public connect(): Promise<boolean> {
+  public async connect(): Promise<boolean> {
     return new Promise((resolve) => {
       resolve(true);
 
