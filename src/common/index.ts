@@ -42,7 +42,8 @@ export const CUSTOM_GAME_EVENTS = {
   GAME_PIECE_ADDED: 'GAME_PIECE_ADDED',
   NEW_GAME_STARTED: 'NEW_GAME_STARTED',
   EXISTING_GAME: 'EXISTING_GAME',
-};
+} as const;
+
 export type CustomGameEvents = keyof typeof CUSTOM_GAME_EVENTS;
 
 export type GamePieceAddedEventData = {
