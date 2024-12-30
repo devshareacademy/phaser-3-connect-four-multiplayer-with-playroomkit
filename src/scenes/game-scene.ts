@@ -16,7 +16,7 @@ import {
 } from '../common';
 import { Service } from '../services/service';
 import { PlayroomService } from '../services/playroom-service';
-import { LocalService } from '../services/local-service';
+// import { LocalService } from '../services/local-service';
 
 export class GameScene extends Phaser.Scene {
   #service!: Service;
@@ -34,7 +34,7 @@ export class GameScene extends Phaser.Scene {
     this.input.enabled = false;
 
     // create game service
-    //this.#service = new LocalService();
+    // this.#service = new LocalService();
     this.#service = new PlayroomService();
 
     // Create game objects
@@ -269,11 +269,11 @@ export class GameScene extends Phaser.Scene {
 
     this.#service.events.once(CUSTOM_GAME_EVENTS.EXISTING_GAME, (data: ExistingGameData) => {
       // update our board state to match the existing game state
-      data.board.forEach((val, idx) => {
+      data.board.forEach((val, index) => {
         if (val === 0) {
           return;
         }
-        const coordinate = ConnectFourUtils.get2DPosition(idx);
+        const coordinate = ConnectFourUtils.get2DPosition(index);
         const player = val === 1 ? ConnectFourData.PLAYER.ONE : ConnectFourData.PLAYER.TWO;
         this.#createGamePiece(coordinate.row, coordinate.col, player, true);
       });
