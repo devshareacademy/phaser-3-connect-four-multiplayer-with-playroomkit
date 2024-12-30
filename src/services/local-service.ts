@@ -1,12 +1,8 @@
-import { Service } from './service';
-import { CUSTOM_GAME_EVENTS, GAME_STATE, GamePieceAddedEventData } from '../common';
 import { ConnectFourData } from '@devshareacademy/connect-four';
+import { CUSTOM_GAME_EVENTS, GAME_STATE, GamePieceAddedEventData } from '../common';
+import { Service } from './service';
 
 export class LocalService extends Service {
-  constructor() {
-    super();
-  }
-
   get isMyTurn(): boolean {
     return true;
   }
@@ -33,12 +29,11 @@ export class LocalService extends Service {
     const currentPlayer = this._connectFour.playersTurn;
     const coordinate = this._connectFour.makeMove(col);
 
+    // emit event about game piece being added
     const data: GamePieceAddedEventData = {
       coordinate,
       player: currentPlayer,
     };
-
-    // emit event about game piece being added
     this._events.emit(CUSTOM_GAME_EVENTS.GAME_PIECE_ADDED, data);
   }
 }
