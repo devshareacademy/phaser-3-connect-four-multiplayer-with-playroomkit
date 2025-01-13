@@ -1,14 +1,22 @@
-# Phaser 3 Connect Four Multiplayer Game
+# Phaser 3 Connect Four Multiplayer Game With Playroomkit
 
-A Phaser 3 implementation of Connect Four with multiplayer support. Multiplayer support is possible due to Playroomkit.
+A <a href="https://phaser.io/" target="_blank">Phaser 3</a> implementation of Connect Four with multiplayer support. Multiplayer support is possible due to <a href="https://joinplayroom.com/" target="_blank">Playroomkit</a>.
+
+To learn how this project was built, you can follow along in a tutorial video on YouTube here:
+
+Coming soon...
+
+![Demo 1](/docs/example1.gif?raw=true 'Demo 1')
+
+![Demo 2](/docs/example2.gif?raw=true 'Demo 2')
 
 ## Local Development
 
 ### Requirements
 
-[Node.js](https://nodejs.org) and [pnpm](https://pnpm.io/) are required to install dependencies and run scripts via `pnpm`.
+<a href="https://nodejs.org" target="_blank">Node.js</a> and <a href="https://pnpm.io/" target="_blank">pnpm</a> are required to install dependencies and run scripts via `pnpm`.
 
-[Vite](https://vitejs.dev/) is required to bundle and serve the web application. This is included as part of the projects dev dependencies.
+<a href="https://vitejs.dev/" target="_blank">Vite</a> is required to bundle and serve the web application. This is included as part of the projects dev dependencies.
 
 ### Available Commands
 
