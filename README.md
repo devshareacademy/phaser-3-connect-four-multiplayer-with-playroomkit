@@ -4,7 +4,8 @@ A <a href="https://phaser.io/" target="_blank">Phaser 3</a> implementation of Co
 
 To learn how this project was built, you can follow along in a tutorial video on YouTube here:
 
-Coming soon...
+[<img src="https://i.ytimg.com/vi/-dLTvoCu8DE/hqdefault.jpg">](https://youtu.be/-dLTvoCu8DE "Build a Real-Time Multiplayer Connect Four Game with Phaser 3 + Playroom Kit")
+
 
 ![Demo 1](/docs/example1.gif?raw=true 'Demo 1')
 
